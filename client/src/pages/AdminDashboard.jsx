@@ -1,33 +1,56 @@
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import AdminAppointments from '../components/AdminAppointments';
+import AdminSlots from '../components/AdminSlots';
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
+    const [activeTab, setActiveTab] = useState('appointments');
 
     return (
-        <div className="p-8">
+        <div className="p-8 bg-gray-100 min-h-screen">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+                <div>
+                    <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+                    <p className="text-gray-600">Welcome back, {user?.name || 'Admin'}!</p>
+                </div>
                 <button
                     onClick={logout}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
                 >
                     Logout
                 </button>
             </div>
-            <p className="mb-4">Welcome back, {user?.name}!</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded shadow border">
-                    <h3 className="font-bold text-lg">Appointments</h3>
-                    <p className="text-3xl mt-2">12</p>
-                </div>
-                <div className="bg-white p-6 rounded shadow border">
-                    <h3 className="font-bold text-lg">Revenue</h3>
-                    <p className="text-3xl mt-2">$1,250</p>
-                </div>
-                <div className="bg-white p-6 rounded shadow border">
-                    <h3 className="font-bold text-lg">New Customers</h3>
-                    <p className="text-3xl mt-2">5</p>
-                </div>
+
+            {/* Tabs */}
+            <div className="flex mb-6 space-x-4 border-b border-gray-300 pb-2">
+                <button
+                    className={`px-4 py-2 font-medium rounded ${activeTab === 'appointments'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                    onClick={() => setActiveTab('appointments')}
+                >
+                    Appointments
+                </button>
+                <button
+                    className={`px-4 py-2 font-medium rounded ${activeTab === 'slots'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                    onClick={() => setActiveTab('slots')}
+                >
+                    Slot Management
+                </button>
+            </div>
+
+            {/* Content */}
+            <div className="transition-all duration-300">
+                {activeTab === 'appointments' ? (
+                    <AdminAppointments />
+                ) : (
+                    <AdminSlots />
+                )}
             </div>
         </div>
     );

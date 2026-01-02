@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import api from '../services/api';
 
 const AdminLogin = () => {
     const [email, setEmail] = useState('');
@@ -9,19 +10,22 @@ const AdminLogin = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // TODO: Connect to actual backend API
         const parsedFrom = location.state?.from?.pathname || '/admin/dashboard';
 
-        // Mock login for demonstration
-        if (email === 'admin@glamslot.com' && password === 'admin') {
-            const mockUser = { id: 1, name: 'Admin User', email, role: 'admin' };
-            const mockToken = 'mock-jwt-token';
-            login(mockUser, mockToken);
-            navigate(parsedFrom, { replace: true });
-        } else {
-            alert('Invalid credentials (Try admin@glamslot.com / admin)');
+        try {
+            const response = await api.post('/auth/login', { email, password });
+
+            if (response.data.success) {
+                // Backend might not return role, so we inject it for ProtectedRoute check
+                const adminUser = { ...response.data.admin, role: 'admin' };
+                login(adminUser, response.data.token);
+                navigate(parsedFrom, { replace: true });
+            }
+        } catch (error) {
+            const msg = error.response?.data?.error || 'Login failed. Please check your credentials.';
+            alert(msg);
         }
     };
 
