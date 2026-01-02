@@ -61,6 +61,9 @@ const createTimeSlots = async (req, res) => {
 // @desc    Get available time slots for a specific date
 // @route   GET /api/slots/available?date=YYYY-MM-DD
 // @access  Public
+// @desc    Get available time slots for a specific date
+// @route   GET /api/slots/available?date=YYYY-MM-DD
+// @access  Public
 const getAvailableSlots = async (req, res) => {
     try {
         const { date } = req.query;
@@ -72,10 +75,36 @@ const getAvailableSlots = async (req, res) => {
             });
         }
 
-        // Parse date to match stored format
+        // Parse date to match stored format (UTC midnight for the date string)
         const requestedDate = new Date(date);
         const nextDay = new Date(requestedDate);
         nextDay.setDate(nextDay.getDate() + 1);
+
+        // Check if ANY slots exist for this date (booked or unbooked)
+        const existingCount = await TimeSlot.countDocuments({
+            date: {
+                $gte: requestedDate,
+                $lt: nextDay,
+            },
+        });
+
+        // DEMO MODE: If no slots exist for this date, seed them automatically
+        if (existingCount === 0) {
+            const DEMO_TIMES = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+            const demoSlots = DEMO_TIMES.map(time => ({
+                date: requestedDate,
+                time: time,
+                isBooked: false
+            }));
+
+            try {
+                await TimeSlot.insertMany(demoSlots);
+                console.log(`Seeded demo slots for ${date}`);
+            } catch (seedError) {
+                console.error("Error seeding demo slots:", seedError);
+                // Continue to fetch whatever is there, or handle error
+            }
+        }
 
         const availableSlots = await TimeSlot.find({
             date: {
